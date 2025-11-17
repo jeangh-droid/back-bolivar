@@ -35,7 +35,6 @@ public class SocioControlador {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SocioResponseDTO> agregarSocio(@RequestBody SocioRequestDTO socioRequestDTO) {
         SocioResponseDTO nuevoSocio = socioService.crearSocio(socioRequestDTO);
-        // Devuelve 201 Created + el recurso creado
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoSocio);
     }
 

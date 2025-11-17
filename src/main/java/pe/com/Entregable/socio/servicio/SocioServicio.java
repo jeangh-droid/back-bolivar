@@ -1,10 +1,14 @@
 package pe.com.Entregable.socio.servicio;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder; // ¡Importa el Encoder!
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.com.Entregable.enums.Estado;
 import pe.com.Entregable.enums.Sanidad;
+import pe.com.Entregable.login.modelo.Privilegio;
 import pe.com.Entregable.login.modelo.Usuario;
+import pe.com.Entregable.login.repositorio.PrivilegioRepositorio;
 import pe.com.Entregable.login.repositorio.UsuarioRepositorio;
 import pe.com.Entregable.socio.dto.SocioRequestDTO;
 import pe.com.Entregable.socio.dto.SocioResponseDTO;
@@ -21,7 +25,12 @@ public class SocioServicio implements ISocioService {
     private final SocioRepositorio socioRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
 
+    // --- ¡DEPENDENCIAS INYECTADAS! ---
+    private final PasswordEncoder passwordEncoder;
+    private final PrivilegioRepositorio privilegioRepositorio;
+
     @Override
+    @Transactional
     public List<SocioResponseDTO> listarSocios() {
         return socioRepositorio
                 .findAll()
@@ -31,67 +40,104 @@ public class SocioServicio implements ISocioService {
     }
 
     @Override
-    public SocioResponseDTO obtenerSocioPorId(Integer idSocio) {
-        Socio socio = socioRepositorio.findById(idSocio)
-                .orElseThrow(() -> new ResourceNotFoundException("Socio", "id", idSocio));
+    @Transactional(readOnly = true)
+    public SocioResponseDTO obtenerSocioPorId(Integer id) {
+        // (Nota: Tu interfaz usa 'idSocio', así que el DTO y el front deben usar 'id')
+        // Voy a asumir que tu entidad Socio SÍ tiene 'idSocio'
+        Socio socio = socioRepositorio.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Socio", "id", id));
         return new SocioResponseDTO(socio);
     }
 
     @Override
     @Transactional
-    public SocioResponseDTO crearSocio(SocioRequestDTO socioRequestDTO) {
-        // 1. Buscar el Usuario por DNI
-        Usuario usuario = usuarioRepositorio.findByUsername(socioRequestDTO.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", socioRequestDTO.getUsername()));
+    public SocioResponseDTO crearSocio(SocioRequestDTO dto) {
+        // 1. Validar que el DNI y Username no existan
+        if (usuarioRepositorio.findByUsername(dto.getUsername()).isPresent()) {
+            throw new RuntimeException("El username " + dto.getUsername() + " ya está registrado.");
+        }
+        if (usuarioRepositorio.findByDni(dto.getDni()).isPresent()) {
+            throw new RuntimeException("El DNI " + dto.getDni() + " ya está registrado.");
+        }
 
-        // 2. Mapear DTO a Entidad
-        Socio socio = new Socio();
-        mapDtoToEntity(socioRequestDTO, socio, usuario);
+        Privilegio socioPrivilegio = privilegioRepositorio.findByNombre("SOCIO")
+                .orElseThrow(() -> new ResourceNotFoundException("Privilegio", "nombre", "SOCIO"));
 
-        // 3. Guardar y devolver DTO de respuesta
-        Socio nuevoSocio = socioRepositorio.save(socio);
-        return new SocioResponseDTO(nuevoSocio);
+        // 2. Crear el nuevo Usuario
+        Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setUsername(dto.getUsername());
+        nuevoUsuario.setDni(dto.getDni());
+        nuevoUsuario.setNombre(dto.getNombre());
+        nuevoUsuario.setApellido(dto.getApellido());
+        nuevoUsuario.setNumero(dto.getNumero());
+
+        // --- ¡AQUÍ SE ENCRIPTA! ---
+        nuevoUsuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        nuevoUsuario.setEstado(Estado.ACTIVO);
+        nuevoUsuario.setPrivilegio(socioPrivilegio);
+
+        Usuario usuarioGuardado = usuarioRepositorio.save(nuevoUsuario);
+
+        // 3. Crear el nuevo Socio y enlazarlo
+        Socio nuevoSocio = new Socio();
+        nuevoSocio.setUsuario(usuarioGuardado);
+        nuevoSocio.setDireccion(dto.getDireccion());
+        nuevoSocio.setTarjetaSocio(dto.getTarjetaSocio());
+        nuevoSocio.setCarnetSanidad(Sanidad.valueOf(dto.getCarnetSanidad().toUpperCase()));
+
+        Socio socioGuardado = socioRepositorio.save(nuevoSocio);
+        return new SocioResponseDTO(socioGuardado);
     }
 
     @Override
     @Transactional
-    public SocioResponseDTO actualizarSocio(Integer idSocio, SocioRequestDTO socioRequestDTO) {
-        // 1. Buscar el Socio existente
+    public SocioResponseDTO actualizarSocio(Integer idSocio, SocioRequestDTO dto) {
         Socio socio = socioRepositorio.findById(idSocio)
                 .orElseThrow(() -> new ResourceNotFoundException("Socio", "id", idSocio));
 
-        // 2. Buscar el Usuario (incluso si cambia)
-        Usuario usuario = usuarioRepositorio.findByUsername(socioRequestDTO.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", socioRequestDTO.getUsername()));
+        Usuario usuario = socio.getUsuario();
 
-        // 3. Mapear DTO a Entidad
-        mapDtoToEntity(socioRequestDTO, socio, usuario);
+        // Validar DNI y Username
+        if (!usuario.getDni().equals(dto.getDni())) {
+            if (usuarioRepositorio.findByDni(dto.getDni()).filter(u -> !u.getId().equals(usuario.getId())).isPresent()) {
+                throw new RuntimeException("El DNI " + dto.getDni() + " ya pertenece a otro usuario.");
+            }
+            usuario.setDni(dto.getDni());
+        }
+        if (!usuario.getUsername().equals(dto.getUsername())) {
+            if (usuarioRepositorio.findByUsername(dto.getUsername()).filter(u -> !u.getId().equals(usuario.getId())).isPresent()) {
+                throw new RuntimeException("El Username " + dto.getUsername() + " ya pertenece a otro usuario.");
+            }
+            usuario.setUsername(dto.getUsername());
+        }
 
-        // 4. Guardar y devolver DTO de respuesta
+        usuario.setNombre(dto.getNombre());
+        usuario.setApellido(dto.getApellido());
+        usuario.setNumero(dto.getNumero());
+
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        usuarioRepositorio.save(usuario);
+
+        socio.setDireccion(dto.getDireccion());
+        socio.setTarjetaSocio(dto.getTarjetaSocio());
+        socio.setCarnetSanidad(Sanidad.valueOf(dto.getCarnetSanidad().toUpperCase()));
+
         Socio socioActualizado = socioRepositorio.save(socio);
         return new SocioResponseDTO(socioActualizado);
     }
 
     @Override
     @Transactional
-    public void eliminarSocio(Integer idSocio) {
-        // 1. Buscar el Socio existente
-        Socio socio = socioRepositorio.findById(idSocio)
-                .orElseThrow(() -> new ResourceNotFoundException("Socio", "id", idSocio));
+    public void eliminarSocio(Integer id) {
+        Socio socio = socioRepositorio.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Socio", "id", id));
 
-        // 2. Eliminar
+        Usuario usuarioAsociado = socio.getUsuario();
         socioRepositorio.delete(socio);
-    }
-
-    private void mapDtoToEntity(SocioRequestDTO dto, Socio socio, Usuario usuario) {
-        socio.setUsuario(usuario);
-        socio.setDireccion(dto.getDireccion());
-        socio.setTarjetaSocio(dto.getTarjetaSocio());
-
-        try {
-            socio.setCarnetSanidad(Sanidad.valueOf(dto.getCarnetSanidad().toUpperCase()));
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Valor de Carnet de Sanidad inválido: " + dto.getCarnetSanidad());
-        }
+        usuarioRepositorio.delete(usuarioAsociado);
     }
 }
