@@ -32,4 +32,10 @@ public class PuestoControlador {
         PuestoResponseDTO puestoActualizado = puestoService.actualizarPuesto(id, dto);
         return ResponseEntity.ok(puestoActualizado);
     }
+
+    @GetMapping("/libres")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<PuestoResponseDTO> listarPuestosLibres() {
+        return puestoService.listarPuestosLibres();
+    }
 }

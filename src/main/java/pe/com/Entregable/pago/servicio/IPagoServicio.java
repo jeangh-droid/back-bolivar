@@ -10,4 +10,5 @@ public interface IPagoServicio {
     PagoResponseDTO crearPago(PagoRequestDTO dto);
     PagoResponseDTO actualizarPago(Integer id, PagoRequestDTO dto);
     void eliminarPago(Integer id);
+    public List<PagoResponseDTO> buscarPagos(String termino);
 }

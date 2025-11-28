@@ -16,4 +16,9 @@ public interface ISocioService {
 
     void eliminarSocio(Integer idSocio);
 
+    SocioResponseDTO obtenerPerfilSocio(String username);
+
+    List<SocioResponseDTO> buscarSocios(String termino);
+
+    boolean existeUsername(String username);
 }

@@ -3,7 +3,10 @@ package pe.com.Entregable.pago.servicio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.com.Entregable.enums.EstadoMulta;
 import pe.com.Entregable.enums.TipoPago;
+import pe.com.Entregable.multa.modelo.Multa;
+import pe.com.Entregable.multa.repositorio.MultaRepositorio;
 import pe.com.Entregable.pago.dto.PagoRequestDTO;
 import pe.com.Entregable.pago.dto.PagoResponseDTO;
 import pe.com.Entregable.pago.modelo.Pago;
@@ -22,6 +25,7 @@ public class PagoServicio implements IPagoServicio {
 
     private final PagoRepositorio pagoRepositorio;
     private final SocioRepositorio socioRepositorio;
+    private final MultaRepositorio multaRepositorio;
 
     @Override
     @Transactional(readOnly = true)
@@ -45,13 +49,13 @@ public class PagoServicio implements IPagoServicio {
         Socio socio = socioRepositorio.findById(dto.getIdSocio())
                 .orElseThrow(() -> new ResourceNotFoundException("Socio", "id", dto.getIdSocio()));
 
+        // 1. Crear y guardar el Pago
         Pago pago = new Pago();
         pago.setSocio(socio);
         pago.setTipoPago(TipoPago.valueOf(dto.getTipoPago().toUpperCase()));
         pago.setMonto(dto.getMonto());
         pago.setObservacion(dto.getObservacion());
 
-        // Parsea la fecha del DTO, o usa la actual si está vacía
         if(dto.getFechaPago() != null && !dto.getFechaPago().isEmpty()) {
             pago.setFechaPago(LocalDateTime.parse(dto.getFechaPago()));
         } else {
@@ -59,6 +63,24 @@ public class PagoServicio implements IPagoServicio {
         }
 
         Pago pagoGuardado = pagoRepositorio.save(pago);
+
+        if (pago.getTipoPago() == TipoPago.MULTA) {
+            if (dto.getIdMulta() == null) {
+                throw new RuntimeException("El ID de la multa es obligatorio para pagos de tipo MULTA");
+            }
+
+            Multa multa = multaRepositorio.findById(dto.getIdMulta())
+                    .orElseThrow(() -> new ResourceNotFoundException("Multa", "id", dto.getIdMulta()));
+
+            if (!multa.getSocio().getId().equals(socio.getId())) {
+                throw new RuntimeException("La multa no corresponde al socio seleccionado");
+            }
+
+            multa.setEstado(EstadoMulta.PAGADO);
+            multa.setPago(pagoGuardado);
+
+            multaRepositorio.save(multa);         }
+
         return new PagoResponseDTO(pagoGuardado);
     }
 
@@ -84,8 +106,24 @@ public class PagoServicio implements IPagoServicio {
     @Override
     @Transactional
     public void eliminarPago(Integer id) {
+
         Pago pago = pagoRepositorio.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pago", "id", id));
         pagoRepositorio.delete(pago);
+    }
+
+    public List<PagoResponseDTO> listarPagosPorUsuario(String username) {
+        return pagoRepositorio.findBySocioUsuarioUsername(username)
+                .stream()
+                .map(PagoResponseDTO::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PagoResponseDTO> buscarPagos(String termino) {
+        return pagoRepositorio.buscarPorTermino(termino)
+                .stream()
+                .map(PagoResponseDTO::new)
+                .collect(Collectors.toList());
     }
 }

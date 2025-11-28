@@ -1,4 +1,4 @@
-package pe.com.Entregable.Administrador.modelo;
+package pe.com.Entregable.administrador.modelo;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

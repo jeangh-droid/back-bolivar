@@ -34,7 +34,7 @@ public class UsuarioDetails implements UserDetails {
     }
 
     public String getNombreCompleto() {
-        return usuario.getNombre() + usuario.getApellido();
+        return usuario.getNombre() + " " + usuario.getApellido();
     }
 
     @Override

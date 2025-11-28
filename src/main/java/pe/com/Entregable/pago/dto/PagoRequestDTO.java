@@ -6,6 +6,9 @@ import java.math.BigDecimal;
 @Data
 public class PagoRequestDTO {
     private Integer idSocio;
+
+    private Integer idMulta;
+
     private String tipoPago;
     private BigDecimal monto;
     private String fechaPago;

@@ -1,4 +1,4 @@
-package pe.com.Entregable.login.seguridad;
+package pe.com.Entregable.login.servicio;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import pe.com.Entregable.login.repositorio.UsuarioRepositorio;
+import pe.com.Entregable.login.seguridad.UsuarioDetails;
 
 @Service
 @RequiredArgsConstructor

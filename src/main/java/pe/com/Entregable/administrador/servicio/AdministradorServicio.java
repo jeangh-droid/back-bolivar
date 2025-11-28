@@ -1,9 +1,9 @@
-package pe.com.Entregable.Administrador.servicio;
+package pe.com.Entregable.administrador.servicio;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pe.com.Entregable.Administrador.modelo.Administrador;
-import pe.com.Entregable.Administrador.repositorio.AdministradorRepositorio;
+import pe.com.Entregable.administrador.modelo.Administrador;
+import pe.com.Entregable.administrador.repositorio.AdministradorRepositorio;
 
 import java.util.List;
 
