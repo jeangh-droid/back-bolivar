@@ -52,21 +52,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // Permite que tu frontend de Angular se conecte
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
-
-        // Define los métodos HTTP que permites (GET, POST, etc.)
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Permite todos los headers. ¡Importante para que 'Authorization' (tu token) funcione!
         configuration.setAllowedHeaders(Arrays.asList("*"));
-
-        // Permite que el navegador envíe credenciales (como el token)
         configuration.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Aplica esta configuración a TODAS las rutas de tu API ("/**")
+        // Aplica esta configuración a TODAS las rutas de del API ("/**")
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

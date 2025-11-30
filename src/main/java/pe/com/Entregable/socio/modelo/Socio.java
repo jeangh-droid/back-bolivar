@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Cascade;
 import pe.com.Entregable.enums.Estado;
 import pe.com.Entregable.enums.Sanidad;
 import pe.com.Entregable.login.modelo.Usuario;
@@ -21,6 +22,7 @@ public class Socio {
 
     @OneToOne
     @JoinColumn(name = "id_usuario", nullable = false)
+    @Cascade(org.hibernate.annotations.CascadeType.ALL)
     private Usuario usuario;
 
     @Column(length = 200)

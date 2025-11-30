@@ -3,7 +3,7 @@ package pe.com.Entregable.puesto.servicio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pe.com.Entregable.enums.EstadoPuesto;
+import pe.com.Entregable.enums.EstadoPuesto; // Importar
 import pe.com.Entregable.enums.LicenciaFuncionamiento;
 import pe.com.Entregable.puesto.dto.PuestoRequestDTO;
 import pe.com.Entregable.puesto.dto.PuestoResponseDTO;
@@ -32,20 +32,30 @@ public class PuestoServicio implements IPuestoServicio {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<PuestoResponseDTO> listarPuestosLibres() {
+        return puestoRepositorio.findByEstado(EstadoPuesto.INACTIVO).stream()
+                .map(PuestoResponseDTO::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public PuestoResponseDTO actualizarPuesto(Integer idPuesto, PuestoRequestDTO dto) {
-
         Puesto puesto = puestoRepositorio.findById(idPuesto)
                 .orElseThrow(() -> new ResourceNotFoundException("Puesto", "id", idPuesto));
 
-        Socio socio = socioRepositorio.findById(dto.getIdSocio())
-                .orElseThrow(() -> new ResourceNotFoundException("Socio", "id", dto.getIdSocio()));
+        if (dto.getIdSocio() != null && dto.getIdSocio() > 0) {
+            Socio socio = socioRepositorio.findById(dto.getIdSocio())
+                    .orElseThrow(() -> new ResourceNotFoundException("Socio", "id", dto.getIdSocio()));
+            puesto.setSocio(socio);
+        } else {
+            puesto.setSocio(null);
+        }
 
-        puesto.setSocio(socio);
         puesto.setLicenciaFuncionamiento(LicenciaFuncionamiento.valueOf(dto.getLicenciaFuncionamiento().toUpperCase()));
         puesto.setEstado(EstadoPuesto.valueOf(dto.getEstado().toUpperCase()));
 
-        Puesto puestoActualizado = puestoRepositorio.save(puesto);
-        return new PuestoResponseDTO(puestoActualizado);
+        return new PuestoResponseDTO(puestoRepositorio.save(puesto));
     }
 }

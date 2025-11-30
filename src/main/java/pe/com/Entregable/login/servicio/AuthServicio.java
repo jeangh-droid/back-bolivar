@@ -8,7 +8,6 @@ import pe.com.Entregable.login.dto.LoginDTO;
 import pe.com.Entregable.login.dto.LoginResponseDTO;
 import pe.com.Entregable.login.modelo.Usuario;
 import pe.com.Entregable.login.repositorio.UsuarioRepositorio;
-import pe.com.Entregable.login.seguridad.JwtService;
 import pe.com.Entregable.login.seguridad.UsuarioDetails;
 
 @Service

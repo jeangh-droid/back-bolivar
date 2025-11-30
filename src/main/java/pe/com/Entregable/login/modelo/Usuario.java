@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
 import pe.com.Entregable.enums.Estado;
+import pe.com.Entregable.enums.TipoDocumento;
 
 @Entity
 @Data
@@ -23,7 +23,11 @@ public class Usuario {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(unique = true, length = 8, nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoDocumento tipoDocumento;
+
+    @Column(unique = true, length = 20, nullable = false)
     private String dni;
     private String numero;
 

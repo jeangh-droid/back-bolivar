@@ -18,7 +18,7 @@ public class Puesto {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "id_socio", nullable = false)
+    @JoinColumn(name = "id_socio", nullable = true)
     private Socio socio;
 
     @Column(nullable = false, length = 100)
@@ -33,5 +33,5 @@ public class Puesto {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EstadoPuesto estado = EstadoPuesto.OPERATIVO;
+    private EstadoPuesto estado = EstadoPuesto.INACTIVO;
 }

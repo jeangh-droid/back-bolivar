@@ -12,6 +12,7 @@ public class SocioResponseDTO {
     private Integer id;
     private String nombre;
     private String apellido;
+    private String tipoDocumento;
     private String dni;
     private String username;
     private String numero;
@@ -19,15 +20,45 @@ public class SocioResponseDTO {
     private String carnetSanidad;
     private String tarjetaSocio;
 
+    private String estadoUsuario;
+    private String numeroPuesto;
+
     public SocioResponseDTO(Socio socio) {
         this.id = socio.getId();
-        this.nombre = socio.getUsuario().getNombre();
-        this.apellido = socio.getUsuario().getApellido();
-        this.username = socio.getUsuario().getUsername();
-        this.numero = socio.getUsuario().getNumero();
-        this.dni = socio.getUsuario().getDni();
+
+        if (socio.getUsuario() != null) {
+            this.nombre = socio.getUsuario().getNombre();
+            this.apellido = socio.getUsuario().getApellido();
+            this.dni = socio.getUsuario().getDni();
+            this.username = socio.getUsuario().getUsername();
+            this.numero = socio.getUsuario().getNumero();
+
+            if (socio.getUsuario().getTipoDocumento() != null) {
+                this.tipoDocumento = socio.getUsuario().getTipoDocumento().name();
+            } else {
+                this.tipoDocumento = "OTROS";
+            }
+
+            if (socio.getUsuario().getEstado() != null) {
+                this.estadoUsuario = socio.getUsuario().getEstado().name();
+            } else {
+                this.estadoUsuario = "INACTIVO"; // Valor por defecto si es null en BD
+            }
+        } else {
+            this.nombre = "N/A";
+            this.estadoUsuario = "INACTIVO";
+        }
+
         this.direccion = socio.getDireccion();
-        this.carnetSanidad = socio.getCarnetSanidad().name();
+
+        if (socio.getCarnetSanidad() != null) {
+            this.carnetSanidad = socio.getCarnetSanidad().name();
+        } else {
+            this.carnetSanidad = "DESCONOCIDO";
+        }
+
         this.tarjetaSocio = socio.getTarjetaSocio();
+
     }
+
 }

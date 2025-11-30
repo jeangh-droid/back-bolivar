@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import pe.com.Entregable.socio.dto.SocioRequestDTO;
 import pe.com.Entregable.socio.dto.SocioResponseDTO;
@@ -24,7 +25,7 @@ public class SocioControlador {
         return socioService.listarSocios();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SocioResponseDTO> obtenerSocioPorId(@PathVariable Integer id) {
         SocioResponseDTO socio = socioService.obtenerSocioPorId(id);
@@ -38,17 +39,39 @@ public class SocioControlador {
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoSocio);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SocioResponseDTO> modificarSocio(@PathVariable Integer id, @RequestBody SocioRequestDTO socioRequestDTO) {
         SocioResponseDTO socioActualizado = socioService.actualizarSocio(id, socioRequestDTO);
         return ResponseEntity.ok(socioActualizado);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminarSocio(@PathVariable Integer id) {
         socioService.eliminarSocio(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/mi-perfil")
+    @PreAuthorize("hasRole('SOCIO')")
+    public ResponseEntity<SocioResponseDTO> obtenerMiPerfil() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        SocioResponseDTO perfil = socioService.obtenerPerfilSocio(username);
+        return ResponseEntity.ok(perfil);
+    }
+
+    @GetMapping("/buscar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<SocioResponseDTO>> buscarSocios(@RequestParam String termino) {
+        return ResponseEntity.ok(socioService.buscarSocios(termino));
+    }
+
+    @GetMapping("/check-username/{username}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Boolean> verificarUsername(@PathVariable String username) {
+        return ResponseEntity.ok(socioService.existeUsername(username));
+    }
+
 }
