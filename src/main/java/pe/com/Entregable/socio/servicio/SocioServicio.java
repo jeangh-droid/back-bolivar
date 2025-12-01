@@ -166,4 +166,13 @@ public class SocioServicio implements ISocioService {
     public boolean existeUsername(String username) {
         return usuarioRepositorio.existsByUsername(username);
     }
+
+    @Override
+    public List<SocioResponseDTO> listarSociosActivos() {
+        return socioRepositorio.findByUsuarioEstado(Estado.ACTIVO)
+                .stream()
+                .map(SocioResponseDTO::new)
+                .collect(Collectors.toList());
+    }
+
 }
