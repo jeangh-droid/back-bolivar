@@ -74,4 +74,9 @@ public class SocioControlador {
         return ResponseEntity.ok(socioService.existeUsername(username));
     }
 
+    @GetMapping("/activos")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<SocioResponseDTO>> listarSociosActivos() {
+        return ResponseEntity.ok(socioService.listarSociosActivos());
+    }
 }

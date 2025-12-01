@@ -21,4 +21,6 @@ public interface ISocioService {
     List<SocioResponseDTO> buscarSocios(String termino);
 
     boolean existeUsername(String username);
+
+    List<SocioResponseDTO> listarSociosActivos();
 }
