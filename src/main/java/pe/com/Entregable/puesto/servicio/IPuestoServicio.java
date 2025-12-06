@@ -8,5 +8,5 @@ public interface IPuestoServicio {
     List<PuestoResponseDTO> listarPuestos();
     PuestoResponseDTO actualizarPuesto(Integer idPuesto, PuestoRequestDTO dto);
     List<PuestoResponseDTO> listarPuestosLibres();
-
+    List<PuestoResponseDTO> buscarPuestos(String termino);
 }

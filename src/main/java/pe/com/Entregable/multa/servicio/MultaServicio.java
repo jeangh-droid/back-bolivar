@@ -78,4 +78,10 @@ public class MultaServicio implements IMultaServicio{
                 .collect(Collectors.toList());
     }
 
+    public List<MultaResponseDTO> buscarPorTermino(String termino) {
+        return multaRepositorio.buscarPorTermino(termino)
+                .stream()
+                .map(MultaResponseDTO::new)
+                .collect(Collectors.toList());
+    }
 }

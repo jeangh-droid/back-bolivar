@@ -10,4 +10,5 @@ public interface IMultaServicio {
     MultaResponseDTO crearMulta(MultaRequestDTO dto);
     MultaResponseDTO actualizarMulta(Integer id, MultaRequestDTO dto);
     void eliminarMulta(Integer id);
+    List<MultaResponseDTO> buscarPorTermino(String termino);
 }

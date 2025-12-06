@@ -3,7 +3,7 @@ package pe.com.Entregable.puesto.servicio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pe.com.Entregable.enums.EstadoPuesto; // Importar
+import pe.com.Entregable.enums.EstadoPuesto;
 import pe.com.Entregable.enums.LicenciaFuncionamiento;
 import pe.com.Entregable.puesto.dto.PuestoRequestDTO;
 import pe.com.Entregable.puesto.dto.PuestoResponseDTO;
@@ -39,6 +39,15 @@ public class PuestoServicio implements IPuestoServicio {
                 .collect(Collectors.toList());
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PuestoResponseDTO> buscarPuestos(String termino) {
+        return puestoRepositorio.buscarPorTermino(termino).stream()
+                .map(PuestoResponseDTO::new)
+                .collect(Collectors.toList());
+    }
+
     @Override
     @Transactional
     public PuestoResponseDTO actualizarPuesto(Integer idPuesto, PuestoRequestDTO dto) {
@@ -49,13 +58,13 @@ public class PuestoServicio implements IPuestoServicio {
             Socio socio = socioRepositorio.findById(dto.getIdSocio())
                     .orElseThrow(() -> new ResourceNotFoundException("Socio", "id", dto.getIdSocio()));
             puesto.setSocio(socio);
+            puesto.setEstado(EstadoPuesto.OPERATIVO);
         } else {
             puesto.setSocio(null);
+            puesto.setEstado(EstadoPuesto.INACTIVO);
         }
-
         puesto.setLicenciaFuncionamiento(LicenciaFuncionamiento.valueOf(dto.getLicenciaFuncionamiento().toUpperCase()));
-        puesto.setEstado(EstadoPuesto.valueOf(dto.getEstado().toUpperCase()));
-
         return new PuestoResponseDTO(puestoRepositorio.save(puesto));
     }
+
 }

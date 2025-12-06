@@ -1,18 +1,13 @@
 package pe.com.Entregable.socio.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import pe.com.Entregable.socio.modelo.Socio;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class SocioResponseDTO {
     private Integer id;
     private String nombre;
     private String apellido;
-    private String tipoDocumento;
     private String dni;
     private String username;
     private String numero;
@@ -22,6 +17,7 @@ public class SocioResponseDTO {
 
     private String estadoUsuario;
     private String numeroPuesto;
+    private Integer idPuesto;
 
     public SocioResponseDTO(Socio socio) {
         this.id = socio.getId();
@@ -32,17 +28,10 @@ public class SocioResponseDTO {
             this.dni = socio.getUsuario().getDni();
             this.username = socio.getUsuario().getUsername();
             this.numero = socio.getUsuario().getNumero();
-
-            if (socio.getUsuario().getTipoDocumento() != null) {
-                this.tipoDocumento = socio.getUsuario().getTipoDocumento().name();
-            } else {
-                this.tipoDocumento = "OTROS";
-            }
-
             if (socio.getUsuario().getEstado() != null) {
                 this.estadoUsuario = socio.getUsuario().getEstado().name();
             } else {
-                this.estadoUsuario = "INACTIVO"; // Valor por defecto si es null en BD
+                this.estadoUsuario = "INACTIVO";
             }
         } else {
             this.nombre = "N/A";
@@ -59,6 +48,13 @@ public class SocioResponseDTO {
 
         this.tarjetaSocio = socio.getTarjetaSocio();
 
+        this.numeroPuesto = "";
+        this.idPuesto = null;
+    }
+
+    public void setPuestoInfo(Integer id, String numero) {
+        this.idPuesto = id;
+        this.numeroPuesto = numero;
     }
 
 }

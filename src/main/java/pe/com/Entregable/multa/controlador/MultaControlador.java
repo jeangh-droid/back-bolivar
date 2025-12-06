@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/multas")
+@RequestMapping("/multas") //http://localhost:8080/multas
 @RequiredArgsConstructor
 public class MultaControlador {
 
@@ -67,4 +67,9 @@ public class MultaControlador {
         return multaService.listarMultasPorUsuario(username);
     }
 
+    @GetMapping("/buscar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<MultaResponseDTO> buscarMulta(@RequestParam String termino) {
+        return multaService.buscarPorTermino(termino);
+    }
 }

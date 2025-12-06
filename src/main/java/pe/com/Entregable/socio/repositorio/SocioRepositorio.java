@@ -22,4 +22,9 @@ public interface SocioRepositorio extends JpaRepository<Socio,Integer> {
 
     List<Socio> findByUsuarioEstado(Estado estado);
 
+    @Query("SELECT s FROM Socio s " +
+            "JOIN s.usuario u " +
+            "WHERE u.estado = 'ACTIVO' " +
+            "AND s.id NOT IN (SELECT p.socio.id FROM Puesto p WHERE p.socio IS NOT NULL)")
+    List<Socio> findSociosActivosSinPuesto();
 }
