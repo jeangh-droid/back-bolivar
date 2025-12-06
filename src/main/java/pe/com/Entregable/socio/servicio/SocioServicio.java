@@ -32,7 +32,6 @@ public class SocioServicio implements ISocioService {
     private final UsuarioRepositorio usuarioRepositorio;
     private final PasswordEncoder passwordEncoder;
     private final PrivilegioRepositorio privilegioRepositorio;
-
     private final PuestoRepositorio puestoRepositorio;
 
     @Override
@@ -40,11 +39,17 @@ public class SocioServicio implements ISocioService {
     public List<SocioResponseDTO> listarSocios() {
         return socioRepositorio.findAll().stream().map(socio -> {
             SocioResponseDTO dto = new SocioResponseDTO(socio);
-            Optional<Puesto> puesto = puestoRepositorio.findBySocio(socio);
-            puesto.ifPresent(p -> dto.setNumeroPuesto(p.getNumeroPuesto()));
+            List<Puesto> puestos = puestoRepositorio.findBySocio(socio);
+
+            if (!puestos.isEmpty()) {
+                Puesto p = puestos.get(0);
+                dto.setPuestoInfo(p.getId(), p.getNumeroPuesto());
+            }
+
             return dto;
         }).collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -61,13 +66,12 @@ public class SocioServicio implements ISocioService {
             throw new RuntimeException("El username ya existe.");
         }
         if (usuarioRepositorio.findByDni(dto.getDni()).isPresent()) {
-            throw new RuntimeException("El  ya existe.");
+            throw new RuntimeException("El DNI ya existe.");
         }
 
         Privilegio socioPrivilegio = privilegioRepositorio.findByNombre("SOCIO")
                 .orElseThrow(() -> new ResourceNotFoundException("Privilegio", "nombre", "SOCIO"));
 
-        // 2. Crear Usuario
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setUsername(dto.getUsername());
         nuevoUsuario.setTipoDocumento(TipoDocumento.valueOf(dto.getTipoDocumento()));
@@ -80,7 +84,6 @@ public class SocioServicio implements ISocioService {
         nuevoUsuario.setPrivilegio(socioPrivilegio);
         Usuario usuarioGuardado = usuarioRepositorio.save(nuevoUsuario);
 
-        // 3. Crear Socio
         Socio nuevoSocio = new Socio();
         nuevoSocio.setUsuario(usuarioGuardado);
         nuevoSocio.setDireccion(dto.getDireccion());
@@ -112,12 +115,15 @@ public class SocioServicio implements ISocioService {
 
         Usuario usuario = socio.getUsuario();
         usuario.setNombre(dto.getNombre());
+        usuario.setApellido(dto.getApellido()); // Añadido
         usuario.setTipoDocumento(TipoDocumento.valueOf(dto.getTipoDocumento()));
+        // Asegúrate de actualizar los demás campos si es necesario (dni, numero, etc)
         usuarioRepositorio.save(usuario);
 
         socio.setDireccion(dto.getDireccion());
+        socio.setTarjetaSocio(dto.getTarjetaSocio());
+        socio.setCarnetSanidad(Sanidad.valueOf(dto.getCarnetSanidad().toUpperCase())); // Añadido
         Socio socioActualizado = socioRepositorio.save(socio);
-
 
         return new SocioResponseDTO(socioActualizado);
     }
@@ -133,9 +139,8 @@ public class SocioServicio implements ISocioService {
         if (usuario.getEstado() == Estado.ACTIVO) {
             usuario.setEstado(Estado.INACTIVO);
 
-            Optional<Puesto> puestoAsignado = puestoRepositorio.findBySocio(socio);
-            if (puestoAsignado.isPresent()) {
-                Puesto puesto = puestoAsignado.get();
+            List<Puesto> puestosAsignados = puestoRepositorio.findBySocio(socio);
+            for (Puesto puesto : puestosAsignados) {
                 puesto.setSocio(null);
                 puesto.setEstado(EstadoPuesto.INACTIVO);
                 puestoRepositorio.save(puesto);
@@ -174,5 +179,4 @@ public class SocioServicio implements ISocioService {
                 .map(SocioResponseDTO::new)
                 .collect(Collectors.toList());
     }
-
 }

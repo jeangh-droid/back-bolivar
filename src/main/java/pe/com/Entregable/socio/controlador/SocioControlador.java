@@ -8,9 +8,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import pe.com.Entregable.socio.dto.SocioRequestDTO;
 import pe.com.Entregable.socio.dto.SocioResponseDTO;
+import pe.com.Entregable.socio.repositorio.SocioRepositorio;
 import pe.com.Entregable.socio.servicio.ISocioService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/socios")
@@ -18,6 +20,7 @@ import java.util.List;
 public class SocioControlador {
 
     private final ISocioService socioService;
+    private final SocioRepositorio socioRepositorio;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -79,4 +82,14 @@ public class SocioControlador {
     public ResponseEntity<List<SocioResponseDTO>> listarSociosActivos() {
         return ResponseEntity.ok(socioService.listarSociosActivos());
     }
+
+    @GetMapping("/disponibles-para-puesto")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<SocioResponseDTO> listarSociosDisponibles() {
+        return socioRepositorio.findSociosActivosSinPuesto()
+                .stream()
+                .map(SocioResponseDTO::new)
+                .collect(Collectors.toList());
+    }
+
 }

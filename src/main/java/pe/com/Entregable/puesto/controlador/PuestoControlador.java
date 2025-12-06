@@ -38,4 +38,10 @@ public class PuestoControlador {
     public List<PuestoResponseDTO> listarPuestosLibres() {
         return puestoService.listarPuestosLibres();
     }
+
+    @GetMapping("/buscar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<PuestoResponseDTO>> buscarPuestos(@RequestParam String termino) {
+        return ResponseEntity.ok(puestoService.buscarPuestos(termino));
+    }
 }

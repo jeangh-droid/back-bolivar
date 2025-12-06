@@ -8,5 +8,5 @@ public class MultaRequestDTO {
     private Integer idSocio;
     private String motivo;
     private BigDecimal monto;
-    private String estado; // "PENDIENTE" o "PAGADO"
+    private String estado;
 }
